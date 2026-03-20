@@ -13,3 +13,6 @@
 [1,"GET: /\n"]
 [1,"GET: /acs_state_to_state_flows.html\n"]
 [1,"GET: /acs_state_to_state_flows.html\n"]
+[1,"pandoc \n  to: html\n  output-file: about.html\n  standalone: true\n  title-prefix: Colorado Migration Review\n  section-divs: true\n  html-math-method: mathjax\n  wrap: none\n  default-image-extension: png\n  toc: true\n  number-sections: false\n  variables: {}\n  \nmetadata\n  document-css: false\n  link-citations: true\n  date-format: long\n  lang: en\n  theme: cosmo\n  code-summary: Show code\n  title: About\n  \n"]
+[1,"Output created: docs\\about.html\n\nWatching files for changes\n"]
+[1,"GET: /about.html\n"]
