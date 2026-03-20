@@ -1,0 +1,5 @@
+---
+title: "Colorado Migration Review"
+---
+
+This repository is intended to be a review of migration data from the United States Census Bureau with a special focus on the state of Colorado. We will review various estimates, demographics, and motivations for migration from data sources such as the Population Estimates Program (PEP), American Community Survey (ACS), and the Current Population Survey (CPS).

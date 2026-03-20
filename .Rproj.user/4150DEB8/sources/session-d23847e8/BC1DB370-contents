@@ -1,0 +1,215 @@
+rm(list=ls())
+library(tidyverse)
+library(readxl)
+library(sdodemog)
+library(tidycensus)
+library(scales)
+
+translate_state_name <- function(x){
+    v1 <- c(
+        state.name, "District of Columbia", "Puerto Rico", "U.S. Island Areas")
+    names(v1) <- c(state.abb, "DC", "PR", "USISLAND")
+    
+    if_else(is.na(v1[x]), x, v1[x])
+}
+
+s2s_acs_raw_files <- "G:/Shared drives/State Demography Office/Data/ACS/" %>%
+    str_c("State2StateMigration/") %>%
+    list.files(full.names = TRUE)
+
+names(s2s_acs_raw_files) <- str_sub(
+    str_split_fixed(s2s_acs_raw_files, ".xl", 2)[,1], -4, -1)
+
+arr_state_names <- str_replace(sort(c(state.abb, "DoC")), "DoC", "DC")
+
+str_c(rep(arr_state_names, each = 2), rep(c("", "_moe"), times = 51))
+
+data_col_names <- c(
+    "state",
+    "popover1",
+    "popover1_moe",
+    "samehouse",
+    "samehouse_moe",
+    "samestate",
+    "samestate_moe",
+    "diffstatetot",
+    "diffstatetot_moe",
+    str_c(rep(arr_state_names, each = 2), rep(c("", "_moe"), times = 51)),
+    "abroad",
+    "abroad_moe",
+    "PR",
+    "PR_moe",
+    "USISLAND",
+    "USISLAND_moe",
+    "foreign",
+    "foreign_moe"
+    )
+
+data_col_names_2024_1 <- c("state", "var", "estimate", "moe")
+data_col_names_2024_2 <- c(
+    "state",
+    "popover1",
+    "popover1_moe",
+    "samehouse",
+    "samehouse_moe",
+    "samestate",
+    "samestate_moe",
+    "diffstatetot",
+    "diffstatetot_moe",
+    "abroad",
+    "abroad_moe")
+data_col_names_2024_3 <- c(
+    "var",
+    "popover1",
+    "popover1_moe",
+    "samehouse",
+    "samehouse_moe",
+    "samestate",
+    "samestate_moe",
+    "diffstatetot",
+    "diffstatetot_moe")
+
+
+harmonize_mig_df <- bind_rows(lapply(names(s2s_acs_raw_files), function(y){
+
+    y_ <- as.numeric(y)
+    if(y_ < 2010){
+        return(tibble())
+    }else if(y_ >= 2024){
+        raw1_df <- read_excel(s2s_acs_raw_files[y], skip = 7, sheet = 1)
+        names(raw1_df) <- data_col_names_2024_1
+        
+        raw2_df <- read_excel(s2s_acs_raw_files[y], skip = 7, sheet = 2)
+        names(raw2_df) <- data_col_names_2024_2
+        
+        raw3_df <- read_excel(s2s_acs_raw_files[y], skip = 7, sheet = 3)
+        names(raw3_df) <- data_col_names_2024_3
+        
+        mod3_df <- raw3_df %>%
+            mutate(state = "United States") %>%
+            select(
+                state, var, estimate = diffstatetot, moe = diffstatetot_moe)
+        
+        mod2_df <- raw2_df %>%
+            mutate(state = if_else(
+                str_starts(state, "Unite"), "United States", state)) %>%
+            filter(!is.na(popover1)) %>%
+            pivot_longer(samehouse:abroad_moe) %>%
+            mutate(var = str_split_fixed(name, "_", 2)[,1]) %>%
+            mutate(type = str_split_fixed(name, "_", 2)[,2]) %>%
+            mutate(type = if_else(type == "", "estimate", type)) %>%
+            mutate(var = translate_state_name(var)) %>%
+            select(-name) %>%
+            pivot_wider(names_from = type, values_from = value) %>%
+            mutate(state = if_else(
+                str_starts(state, "Unite"), "United States", state))
+        
+        mod1_df <- raw1_df %>%
+            mutate(estimate = as.numeric(estimate)) %>%
+            mutate(moe = as.numeric(moe))
+        
+        out_df <- bind_rows(
+            mod2_df,
+            mod1_df %>%
+                left_join(distinct(mod2_df, state, popover1, popover1_moe)),
+            mod3_df %>%
+                left_join(distinct(mod2_df, state, popover1, popover1_moe))) %>%
+            mutate(year = y_)
+        
+        return(out_df)
+    }
+    
+    raw_df <- read_excel(s2s_acs_raw_files[y], skip = 7)
+    
+    keep_cols <- which(
+        str_starts(names(raw_df), "Estimate|MOE") | names(raw_df) == "...1")
+    
+    sub_col_df <- raw_df[keep_cols]
+    
+    names(sub_col_df) <- data_col_names
+    
+    sub_col_df %>%
+        mutate(across(popover1:foreign_moe, as.numeric)) %>%
+        filter(!is.na(popover1)) %>%
+        pivot_longer(samehouse:foreign_moe) %>%
+        mutate(var = str_split_fixed(name, "_", 2)[,1]) %>%
+        mutate(type = str_split_fixed(name, "_", 2)[,2]) %>%
+        mutate(type = if_else(type == "", "estimate", type)) %>%
+        mutate(var = translate_state_name(var)) %>%
+        select(-name) %>%
+        pivot_wider(names_from = type, values_from = value) %>%
+        mutate(state = if_else(
+            str_starts(state, "Unite"), "United States", state)) %>%
+        mutate(year = y_)
+    
+    }))
+
+harmonize_mig_df %>%
+    filter(
+        (state == "United States" & var == "Colorado") |
+            (state == "Colorado" & var == "diffstatetot")) %>%
+    mutate(lwr = estimate - moe, upr = estimate + moe) %>%
+    mutate(type = if_else(var == "Colorado", "Out", "In")) %>%
+    ggplot(aes(x = year, y = estimate, ymin = lwr, ymax = upr, color = type)) +
+    geom_point() +
+    geom_errorbar() +
+    labs(x = NULL, y = NULL, color = NULL) +
+    theme_sdo(base_size = 18) +
+    scale_y_continuous(labels = comma) +
+    theme(legend.position = "bottom") +
+    ggtitle("Migration Flows to Colorado", "ACS Estimates") +
+    scale_color_sdo_discrete(primary = "navy", other = "orange")
+
+pep_est_df <- "https://www2.census.gov/programs-surveys/popest/datasets/" %>%
+    str_c("2010-2020/state/totals/nst-est2020-alldata.csv") %>%
+    read_csv() %>%
+    filter(NAME == "Colorado") %>%
+    pivot_longer(CENSUS2010POP:RNETMIG2020) %>%
+    filter(str_starts(name, "DOMESTIC")) %>%
+    mutate(year = as.numeric(str_sub(name, -4, -1))) %>%
+    select(year, value) %>%
+    filter(year != 2010) %>%
+    bind_rows(
+        get_estimates(
+            "state", product = "components", vintage = 2025, time_series = TRUE
+            ) %>%
+            filter(NAME == "Colorado") %>%
+            filter(variable == "DOMESTICMIG") %>%
+            select(year, value) %>%
+            filter(year != 2020)
+    ) %>%
+    # value corresponds to calendar year
+    mutate(estimate = (lead(value) + value)/2) %>%
+    select(year, estimate) %>%
+    mutate(source = "PEP")
+
+
+acs_est_df <- harmonize_mig_df %>%
+    filter(
+        (state == "United States" & var == "Colorado") |
+            (state == "Colorado" & var == "diffstatetot")) %>%
+    mutate(type = if_else(var == "Colorado", "Out", "In")) %>%
+    arrange(year, type) %>%
+    group_by(year) %>%
+    summarise(
+        estimate = first(estimate) - last(estimate),
+        moe = sum_moe(moe)
+    ) %>%
+    mutate(lwr = estimate - moe, upr = estimate + moe) %>%
+    mutate(source = "ACS")
+
+acs_est_df %>%
+    bind_rows(
+        pep_est_df
+    ) %>%
+    ggplot(aes(
+        x = year, y = estimate, ymin = lwr, ymax = upr, color = source)) +
+    geom_errorbar() +
+    geom_point() +
+    labs(x = NULL, y = NULL, color = NULL) +
+    theme_sdo(base_size = 18) +
+    scale_y_continuous(labels = comma) +
+    theme(legend.position = "bottom") +
+    ggtitle("Net Migration Colorado", "Comparing Sources") +
+    scale_color_sdo_discrete(primary = "lightblue", other = "purple")
+
