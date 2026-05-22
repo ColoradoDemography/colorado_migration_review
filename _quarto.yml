@@ -10,7 +10,9 @@ website:
         text: Home
       - about.qmd
       - href: acs_state_to_state_flows.qmd
-        text: PEP, ACS, Net Migration, and State to State Flows
+        text: PEP & ACS Compare
+      - href: migration_flow_demography.qmd
+        text: Outflow Demography
 
 format:
   html:

@@ -1,0 +1,184 @@
+---
+title: "Migration Out Flow Demography"
+---
+
+```{r message=FALSE,warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(sdodemog)
+library(tidycensus)
+library(scales)
+library(ipumsr)
+library(fredr)
+library(srvyr)
+```
+
+```{r message=FALSE,warning=FALSE}
+vars_ <- c(
+    "AGEP", "SEX", "HISP", "RAC1P", "MIGSP", "STATE", "POBP") 
+
+infl_df <- fredr("CPIAUCSL") %>%
+    mutate(YEAR = year(date)) %>%
+    group_by(YEAR) %>%
+    summarize(adj = mean(value)) %>%
+    filter(YEAR >= 2016, YEAR <= 2024) %>%
+    mutate(adj = last(adj)/adj)
+
+ipums_df <- read_ipums_micro(read_ipums_ddi("./data/ipums/usa_00078.xml")) %>% 
+    mutate(year_group = if_else(
+        YEAR < 2020, "2016-2019", "2021-2024")) %>%
+    filter(STATEFIP != 8) %>%
+    mutate(AGEGROUP = age_to_agegroup(AGE, c(0, 18, 30, 45, 65, Inf))) %>%
+    filter(STATEFIP <= 56) %>%
+    mutate(out_match = case_when(
+        as.numeric(BPL) == as.numeric(STATEFIP) ~ "Return Home",
+        BPL == 8 ~ "Native Departure",
+        BPL <= 56 ~ "US Born Stepwise",
+        BPL > 56 ~ "Foreign Born Stepwise")
+    ) %>%
+    mutate(RACE2 = case_when(
+        as.numeric(HISPAN) > 1 ~ "Hispanic",
+        RACE == 1 ~ "White",
+        RACE == 2 ~ "Black",
+        RACE == 3 ~ "AIAN",
+        RACE <= 6 ~ "API",
+        RACE == 7 ~ "Other",
+        TRUE ~ "2 or more"
+    )) %>%
+    left_join(infl_df) %>%
+    mutate(HHI = as.numeric(HHINCOME)*adj) %>%
+    mutate(INCOMEGROUP = cut(
+        HHI, breaks = c(-Inf, .1, 25000, 50000, 100000, 150000, 250000, Inf),
+        labels = c(
+            "No/Neg Income", "Under 25k", "25-50k", "50-100k", "100-150K",
+            "150-250K", ">250K"
+            )))
+```
+
+```{r message=FALSE,warning=FALSE}
+ipums_design_df <- as_survey(ipums_df, weights = "PERWT", strata = "YEAR")
+
+ipums_design_df %>%
+    group_by(year_group) %>%
+    survey_tally() %>%
+    ungroup() %>%
+    mutate(lo = n - 1.645*n_se, hi = n + 1.645*n_se) %>%
+    ggplot(aes(
+        x = year_group, y = n/4, ymin = lo/4, ymax = hi/4, fill = year_group)) +
+    geom_col(position = "dodge") +
+    geom_errorbar(position = "dodge") +
+    labs(x = NULL, y = NULL, fill = NULL) +
+    theme_sdo(base_size = 18) +
+    scale_y_continuous(labels = comma) +
+    theme(legend.position = "bottom") +
+    ggtitle("Domestic Migration Out Flows for Colorado", "ACS Estimates") +
+    scale_fill_sdo_discrete(primary = "navy", other = "orange")
+```
+
+18 to 29 is the main flow group so more outs makes sense here. The 65 plus is the fastest growing pop so more outs is not so surprising. 
+
+```{r message=FALSE,warning=FALSE}
+ipums_design_df %>%
+    group_by(year_group, AGEGROUP) %>%
+    survey_tally() %>%
+    ungroup() %>%
+    mutate(lo = n - 1.645*n_se, hi = n + 1.645*n_se) %>%
+    ggplot(aes(
+        x = AGEGROUP, y = n/4, ymin = lo/4, ymax = hi/4, fill = year_group)) +
+    geom_col(position = "dodge") +
+    geom_errorbar(position = "dodge") +
+    labs(x = NULL, y = NULL, fill = NULL) +
+    theme_sdo(base_size = 18) +
+    scale_y_continuous(labels = comma) +
+    theme(legend.position = "bottom") +
+    ggtitle("Domestic Migration Out Flows by Age", "Colorado ACS Estimates") +
+    scale_fill_sdo_discrete(primary = "navy", other = "orange")
+
+```
+
+More native departures is interesting but it could just be increasing portions of this population same with US born stepwise.
+
+```{r message=FALSE,warning=FALSE}
+ipums_design_df %>%
+    group_by(year_group, out_match) %>%
+    survey_tally() %>%
+    ungroup() %>%
+    mutate(out_match = str_replace(out_match, " Born", "-Born")) %>%
+    mutate(out_match = str_replace(out_match, " ", "\n")) %>%
+    mutate(lo = n - 1.645*n_se, hi = n + 1.645*n_se) %>%
+    ggplot(aes(
+        x = out_match, y = n/4, ymin = lo/4, ymax = hi/4, fill = year_group)) +
+    geom_col(position = "dodge") +
+    geom_errorbar(position = "dodge") +
+    labs(x = NULL, y = NULL, fill = NULL) +
+    theme_sdo(base_size = 18) +
+    scale_y_continuous(labels = comma) +
+    theme(legend.position = "bottom") +
+    ggtitle("Domestic Migration Out Flows by Type") +
+    scale_fill_sdo_discrete(primary = "navy", other = "orange")
+```
+
+
+
+```{r message=FALSE,warning=FALSE}
+ipums_design_df %>%
+    group_by(year_group, RACE2) %>%
+    survey_tally() %>%
+    ungroup() %>%
+    # white is not statistically significant
+    filter(RACE2 != "White") %>%
+    mutate(lo = n - 1.645*n_se, hi = n + 1.645*n_se) %>%
+    ggplot(aes(
+        x = RACE2, y = n/4, ymin = lo/4, ymax = hi/4, fill = year_group)) +
+    geom_col(position = "dodge") +
+    geom_errorbar(position = "dodge") +
+    labs(x = NULL, y = NULL, fill = NULL) +
+    theme_sdo(base_size = 18) +
+    scale_y_continuous(labels = comma) +
+    theme(legend.position = "bottom") +
+    ggtitle("Domestic Migration Out Flows by Race/Ethnicity") +
+    scale_fill_sdo_discrete(primary = "navy", other = "orange")
+```
+
+
+```{r message=FALSE,warning=FALSE}
+ipums_design_df %>%
+    group_by(year_group, INCOMEGROUP) %>%
+    survey_tally() %>%
+    ungroup() %>%
+    mutate(lo = n - 1.645*n_se, hi = n + 1.645*n_se) %>%
+    mutate(INCOMEGROUP = str_replace(INCOMEGROUP, " ", "\n")) %>%
+    mutate(INCOMEGROUP = factor(INCOMEGROUP, levels = unique(INCOMEGROUP))) %>%
+    ggplot(aes(
+        x = INCOMEGROUP, y = n/4, ymin = lo/4, ymax = hi/4, 
+        fill = year_group)) +
+    geom_col(position = "dodge") +
+    geom_errorbar(position = "dodge") +
+    labs(x = NULL, y = NULL, fill = NULL) +
+    theme_sdo(base_size = 16) +
+    scale_y_continuous(labels = comma) +
+    theme(legend.position = "bottom") +
+    ggtitle("Domestic Migration Out Flows by Income") +
+    scale_fill_sdo_discrete(primary = "navy", other = "orange")
+```
+
+```{r message=FALSE,warning=FALSE}
+ipums_design_df %>%
+    filter(STATEFIP %in% c(45, 6, 12, 48)) %>%
+    mutate(STATE = case_when(
+        STATEFIP == 45 ~ "South Carolina",
+        STATEFIP == 6 ~ "California",
+        STATEFIP == 12 ~ "Florida",
+        STATEFIP == 48 ~ "Texas"
+    )) %>% 
+    group_by(STATE, year_group, out_match) %>%
+    survey_tally() %>%
+    ungroup() %>%
+    mutate(lo = n - 1.645*n_se, hi = n + 1.645*n_se) %>%
+    ggplot(aes(
+        x = year_group, y = n, fill = out_match, ymin = lo, ymax = hi)) +
+    geom_col(position = "dodge") +
+    geom_errorbar(position = "dodge") +
+    facet_wrap(~STATE)
+```
+

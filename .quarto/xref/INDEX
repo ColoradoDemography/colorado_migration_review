@@ -7,5 +7,11 @@
   },
   "acs_state_to_state_flows.qmd": {
     "acs_state_to_state_flows.html": "9a282e59"
+  },
+  "migration_flow_demography.qmd": {
+    "migration_flow_demography.html": "e536d878"
+  },
+  "defining_migrants.qmd": {
+    "defining_migrants.html": "f5664324"
   }
 }
