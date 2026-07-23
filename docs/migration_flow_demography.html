@@ -201,57 +201,88 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(YEAR <span class="sc">&gt;=</span> <span class="dv">2016</span>, YEAR <span class="sc">&lt;=</span> <span class="dv">2024</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">adj =</span> <span class="fu">last</span>(adj)<span class="sc">/</span>adj)</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>ipums_df <span class="ot">&lt;-</span> <span class="fu">read_ipums_micro</span>(<span class="fu">read_ipums_ddi</span>(<span class="st">"./data/ipums/usa_00078.xml"</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">year_group =</span> <span class="fu">if_else</span>(</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        YEAR <span class="sc">&lt;</span> <span class="dv">2020</span>, <span class="st">"2016-2019"</span>, <span class="st">"2021-2024"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(STATEFIP <span class="sc">!=</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">AGEGROUP =</span> <span class="fu">age_to_agegroup</span>(AGE, <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">18</span>, <span class="dv">30</span>, <span class="dv">45</span>, <span class="dv">65</span>, <span class="cn">Inf</span>))) <span class="sc">%&gt;%</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(STATEFIP <span class="sc">&lt;=</span> <span class="dv">56</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">out_match =</span> <span class="fu">case_when</span>(</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.numeric</span>(BPL) <span class="sc">==</span> <span class="fu">as.numeric</span>(STATEFIP) <span class="sc">~</span> <span class="st">"Return Home"</span>,</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        BPL <span class="sc">==</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">"Native Departure"</span>,</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        BPL <span class="sc">&lt;=</span> <span class="dv">56</span> <span class="sc">~</span> <span class="st">"US Born Stepwise"</span>,</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        BPL <span class="sc">&gt;</span> <span class="dv">56</span> <span class="sc">~</span> <span class="st">"Foreign Born Stepwise"</span>)</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">RACE2 =</span> <span class="fu">case_when</span>(</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.numeric</span>(HISPAN) <span class="sc">&gt;</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"Hispanic"</span>,</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"White"</span>,</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="st">"Black"</span>,</span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">3</span> <span class="sc">~</span> <span class="st">"AIAN"</span>,</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">&lt;=</span> <span class="dv">6</span> <span class="sc">~</span> <span class="st">"API"</span>,</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">7</span> <span class="sc">~</span> <span class="st">"Other"</span>,</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"2 or more"</span></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    )) <span class="sc">%&gt;%</span></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(infl_df) <span class="sc">%&gt;%</span></span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">HHI =</span> <span class="fu">as.numeric</span>(HHINCOME)<span class="sc">*</span>adj) <span class="sc">%&gt;%</span></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">INCOMEGROUP =</span> <span class="fu">cut</span>(</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>        HHI, <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, .<span class="dv">1</span>, <span class="dv">25000</span>, <span class="dv">50000</span>, <span class="dv">100000</span>, <span class="dv">150000</span>, <span class="dv">250000</span>, <span class="cn">Inf</span>),</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>        <span class="at">labels =</span> <span class="fu">c</span>(</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>            <span class="st">"No/Neg Income"</span>, <span class="st">"Under 25k"</span>, <span class="st">"25-50k"</span>, <span class="st">"50-100k"</span>, <span class="st">"100-150K"</span>,</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>            <span class="st">"150-250K"</span>, <span class="st">"&gt;250K"</span></span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>            )))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>ipums_df <span class="ot">&lt;-</span> <span class="st">"G:/Shared drives/State Demography Office/#Staff/Neal/"</span> <span class="sc">%&gt;%</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_c</span>(<span class="st">"IPUMS/usa_00078.xml"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">read_ipums_ddi</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">read_ipums_micro</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">year_group =</span> <span class="fu">if_else</span>(</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        YEAR <span class="sc">&lt;</span> <span class="dv">2020</span>, <span class="st">"2016-2019"</span>, <span class="st">"2021-2024"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(STATEFIP <span class="sc">!=</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">AGEGROUP =</span> <span class="fu">age_to_agegroup</span>(AGE, <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">18</span>, <span class="dv">30</span>, <span class="dv">45</span>, <span class="dv">65</span>, <span class="cn">Inf</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(STATEFIP <span class="sc">&lt;=</span> <span class="dv">56</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">out_match =</span> <span class="fu">case_when</span>(</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.numeric</span>(BPL) <span class="sc">==</span> <span class="fu">as.numeric</span>(STATEFIP) <span class="sc">~</span> <span class="st">"Return Home"</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        BPL <span class="sc">==</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">"Native Departure"</span>,</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        BPL <span class="sc">&lt;=</span> <span class="dv">56</span> <span class="sc">~</span> <span class="st">"US Born Stepwise"</span>,</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        BPL <span class="sc">&gt;</span> <span class="dv">56</span> <span class="sc">~</span> <span class="st">"Foreign Born Stepwise"</span>)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">RACE2 =</span> <span class="fu">case_when</span>(</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.numeric</span>(HISPAN) <span class="sc">&gt;</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"Hispanic"</span>,</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"White"</span>,</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="st">"Black"</span>,</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">3</span> <span class="sc">~</span> <span class="st">"AIAN"</span>,</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">&lt;=</span> <span class="dv">6</span> <span class="sc">~</span> <span class="st">"API"</span>,</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">7</span> <span class="sc">~</span> <span class="st">"Other"</span>,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"2 or more"</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    )) <span class="sc">%&gt;%</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(infl_df) <span class="sc">%&gt;%</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">HHI =</span> <span class="fu">as.numeric</span>(HHINCOME)<span class="sc">*</span>adj) <span class="sc">%&gt;%</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">INCOMEGROUP =</span> <span class="fu">cut</span>(</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>        HHI, <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, .<span class="dv">1</span>, <span class="dv">25000</span>, <span class="dv">50000</span>, <span class="dv">100000</span>, <span class="dv">150000</span>, <span class="dv">250000</span>, <span class="cn">Inf</span>),</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>        <span class="at">labels =</span> <span class="fu">c</span>(</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>            <span class="st">"No/Neg Income"</span>, <span class="st">"Under 25k"</span>, <span class="st">"25-50k"</span>, <span class="st">"50-100k"</span>, <span class="st">"100-150K"</span>,</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>            <span class="st">"150-250K"</span>, <span class="st">"&gt;250K"</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>            )))</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>co_ipums_df <span class="ot">&lt;-</span> <span class="st">"G:/Shared drives/State Demography Office/#Staff/Neal/"</span> <span class="sc">%&gt;%</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_c</span>(<span class="st">"IPUMS/usa_00081.xml"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    <span class="fu">read_ipums_ddi</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>    <span class="fu">read_ipums_micro</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">year_group =</span> <span class="fu">if_else</span>(</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>        YEAR <span class="sc">&lt;</span> <span class="dv">2020</span>, <span class="st">"2016-2019"</span>, <span class="st">"2021-2024"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(MIGPLAC1 <span class="sc">!=</span> <span class="dv">8</span>, MIGPLAC1 <span class="sc">&gt;</span> <span class="dv">2</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">AGEGROUP =</span> <span class="fu">age_to_agegroup</span>(AGE, <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">18</span>, <span class="dv">30</span>, <span class="dv">45</span>, <span class="dv">65</span>, <span class="cn">Inf</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(STATEFIP <span class="sc">&lt;=</span> <span class="dv">56</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">RACE2 =</span> <span class="fu">case_when</span>(</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.numeric</span>(HISPAN) <span class="sc">&gt;</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"Hispanic"</span>,</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"White"</span>,</span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="st">"Black"</span>,</span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">3</span> <span class="sc">~</span> <span class="st">"AIAN"</span>,</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">&lt;=</span> <span class="dv">6</span> <span class="sc">~</span> <span class="st">"API"</span>,</span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>        RACE <span class="sc">==</span> <span class="dv">7</span> <span class="sc">~</span> <span class="st">"Other"</span>,</span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>        <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"2 or more"</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>    )) <span class="sc">%&gt;%</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(infl_df) <span class="sc">%&gt;%</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">HHI =</span> <span class="fu">as.numeric</span>(HHINCOME)<span class="sc">*</span>adj) <span class="sc">%&gt;%</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">INCOMEGROUP =</span> <span class="fu">cut</span>(</span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>        HHI, <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, .<span class="dv">1</span>, <span class="dv">25000</span>, <span class="dv">50000</span>, <span class="dv">100000</span>, <span class="dv">150000</span>, <span class="dv">250000</span>, <span class="cn">Inf</span>),</span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>        <span class="at">labels =</span> <span class="fu">c</span>(</span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>            <span class="st">"No/Neg Income"</span>, <span class="st">"Under 25k"</span>, <span class="st">"25-50k"</span>, <span class="st">"50-100k"</span>, <span class="st">"100-150K"</span>,</span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>            <span class="st">"150-250K"</span>, <span class="st">"&gt;250K"</span></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>            )))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>ipums_design_df <span class="ot">&lt;-</span> <span class="fu">as_survey</span>(ipums_df, <span class="at">weights =</span> <span class="st">"PERWT"</span>, <span class="at">strata =</span> <span class="st">"YEAR"</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>ipums_design_df <span class="sc">%&gt;%</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(year_group) <span class="sc">%&gt;%</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survey_tally</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lo =</span> n <span class="sc">-</span> <span class="fl">1.645</span><span class="sc">*</span>n_se, <span class="at">hi =</span> n <span class="sc">+</span> <span class="fl">1.645</span><span class="sc">*</span>n_se) <span class="sc">%&gt;%</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> year_group, <span class="at">y =</span> n<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymin =</span> lo<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymax =</span> hi<span class="sc">/</span><span class="dv">4</span>, <span class="at">fill =</span> year_group)) <span class="sc">+</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_sdo</span>(<span class="at">base_size =</span> <span class="dv">18</span>) <span class="sc">+</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> comma) <span class="sc">+</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>) <span class="sc">+</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Domestic Migration Out Flows for Colorado"</span>, <span class="st">"ACS Estimates"</span>) <span class="sc">+</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_sdo_discrete</span>(<span class="at">primary =</span> <span class="st">"navy"</span>, <span class="at">other =</span> <span class="st">"orange"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>co_ipums_design_df <span class="ot">&lt;-</span> <span class="fu">as_survey</span>(co_ipums_df, <span class="at">weights =</span> <span class="st">"PERWT"</span>, <span class="at">strata =</span> <span class="st">"YEAR"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>ipums_design_df <span class="sc">%&gt;%</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(year_group) <span class="sc">%&gt;%</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survey_tally</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lo =</span> n <span class="sc">-</span> <span class="fl">1.645</span><span class="sc">*</span>n_se, <span class="at">hi =</span> n <span class="sc">+</span> <span class="fl">1.645</span><span class="sc">*</span>n_se) <span class="sc">%&gt;%</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> year_group, <span class="at">y =</span> n<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymin =</span> lo<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymax =</span> hi<span class="sc">/</span><span class="dv">4</span>, <span class="at">fill =</span> year_group)) <span class="sc">+</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_sdo</span>(<span class="at">base_size =</span> <span class="dv">18</span>) <span class="sc">+</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> comma) <span class="sc">+</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>) <span class="sc">+</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Domestic Migration Out Flows for Colorado"</span>, <span class="st">"ACS Estimates"</span>) <span class="sc">+</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_sdo_discrete</span>(<span class="at">primary =</span> <span class="st">"navy"</span>, <span class="at">other =</span> <span class="st">"orange"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -289,27 +320,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>More native departures is interesting but it could just be increasing portions of this population same with US born stepwise.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ipums_design_df <span class="sc">%&gt;%</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(year_group, out_match) <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(year_group, AGEGROUP) <span class="sc">%&gt;%</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survey_tally</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">out_match =</span> <span class="fu">str_replace</span>(out_match, <span class="st">" Born"</span>, <span class="st">"-Born"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">out_match =</span> <span class="fu">str_replace</span>(out_match, <span class="st">" "</span>, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lo =</span> n <span class="sc">-</span> <span class="fl">1.645</span><span class="sc">*</span>n_se, <span class="at">hi =</span> n <span class="sc">+</span> <span class="fl">1.645</span><span class="sc">*</span>n_se) <span class="sc">%&gt;%</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> out_match, <span class="at">y =</span> n<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymin =</span> lo<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymax =</span> hi<span class="sc">/</span><span class="dv">4</span>, <span class="at">fill =</span> year_group)) <span class="sc">+</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_sdo</span>(<span class="at">base_size =</span> <span class="dv">18</span>) <span class="sc">+</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> comma) <span class="sc">+</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>) <span class="sc">+</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Domestic Migration Out Flows by Type"</span>) <span class="sc">+</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_sdo_discrete</span>(<span class="at">primary =</span> <span class="st">"navy"</span>, <span class="at">other =</span> <span class="st">"orange"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lo =</span> n <span class="sc">-</span> <span class="fl">1.645</span><span class="sc">*</span>n_se, <span class="at">hi =</span> n <span class="sc">+</span> <span class="fl">1.645</span><span class="sc">*</span>n_se) <span class="sc">%&gt;%</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">direction =</span> <span class="st">"out"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bind_rows</span>(</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        co_ipums_design_df <span class="sc">%&gt;%</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            <span class="fu">filter</span>(MIGPLAC1 <span class="sc">!=</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>            <span class="fu">group_by</span>(year_group, AGEGROUP) <span class="sc">%&gt;%</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>            <span class="fu">survey_tally</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>            <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mutate</span>(<span class="at">lo =</span> n <span class="sc">-</span> <span class="fl">1.645</span><span class="sc">*</span>n_se, <span class="at">hi =</span> n <span class="sc">+</span> <span class="fl">1.645</span><span class="sc">*</span>n_se) <span class="sc">%&gt;%</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mutate</span>(<span class="at">direction =</span> <span class="st">"in"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> AGEGROUP, <span class="at">y =</span> n<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymin =</span> lo<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymax =</span> hi<span class="sc">/</span><span class="dv">4</span>, <span class="at">fill =</span> direction)) <span class="sc">+</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_sdo</span>(<span class="at">base_size =</span> <span class="dv">18</span>) <span class="sc">+</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> comma) <span class="sc">+</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>) <span class="sc">+</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Domestic Migration Out Flows by Age"</span>, <span class="st">"Colorado ACS Estimates"</span>) <span class="sc">+</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_sdo_discrete</span>(<span class="at">primary =</span> <span class="st">"navy"</span>, <span class="at">other =</span> <span class="st">"orange"</span>) <span class="sc">+</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>year_group) <span class="sc">+</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Rotates x-axis text by 90 degrees (vertical)</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">15</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -319,25 +360,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+<p>More native departures is interesting but it could just be increasing portions of this population same with US born stepwise.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ipums_design_df <span class="sc">%&gt;%</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(year_group, RACE2) <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(year_group, out_match) <span class="sc">%&gt;%</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survey_tally</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># white is not statistically significant</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(RACE2 <span class="sc">!=</span> <span class="st">"White"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">out_match =</span> <span class="fu">str_replace</span>(out_match, <span class="st">" Born"</span>, <span class="st">"-Born"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">out_match =</span> <span class="fu">str_replace</span>(out_match, <span class="st">" "</span>, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lo =</span> n <span class="sc">-</span> <span class="fl">1.645</span><span class="sc">*</span>n_se, <span class="at">hi =</span> n <span class="sc">+</span> <span class="fl">1.645</span><span class="sc">*</span>n_se) <span class="sc">%&gt;%</span></span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> RACE2, <span class="at">y =</span> n<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymin =</span> lo<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymax =</span> hi<span class="sc">/</span><span class="dv">4</span>, <span class="at">fill =</span> year_group)) <span class="sc">+</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> out_match, <span class="at">y =</span> n<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymin =</span> lo<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymax =</span> hi<span class="sc">/</span><span class="dv">4</span>, <span class="at">fill =</span> year_group)) <span class="sc">+</span></span>
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_sdo</span>(<span class="at">base_size =</span> <span class="dv">18</span>) <span class="sc">+</span></span>
 <span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> comma) <span class="sc">+</span></span>
 <span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>) <span class="sc">+</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Domestic Migration Out Flows by Race/Ethnicity"</span>) <span class="sc">+</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Domestic Migration Out Flows by Type"</span>) <span class="sc">+</span></span>
 <span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_sdo_discrete</span>(<span class="at">primary =</span> <span class="st">"navy"</span>, <span class="at">other =</span> <span class="st">"orange"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
@@ -352,23 +394,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ipums_design_df <span class="sc">%&gt;%</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(year_group, INCOMEGROUP) <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(year_group, RACE2) <span class="sc">%&gt;%</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survey_tally</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lo =</span> n <span class="sc">-</span> <span class="fl">1.645</span><span class="sc">*</span>n_se, <span class="at">hi =</span> n <span class="sc">+</span> <span class="fl">1.645</span><span class="sc">*</span>n_se) <span class="sc">%&gt;%</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">INCOMEGROUP =</span> <span class="fu">str_replace</span>(INCOMEGROUP, <span class="st">" "</span>, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">INCOMEGROUP =</span> <span class="fu">factor</span>(INCOMEGROUP, <span class="at">levels =</span> <span class="fu">unique</span>(INCOMEGROUP))) <span class="sc">%&gt;%</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># white is not statistically significant</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(RACE2 <span class="sc">!=</span> <span class="st">"White"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lo =</span> n <span class="sc">-</span> <span class="fl">1.645</span><span class="sc">*</span>n_se, <span class="at">hi =</span> n <span class="sc">+</span> <span class="fl">1.645</span><span class="sc">*</span>n_se) <span class="sc">%&gt;%</span></span>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> INCOMEGROUP, <span class="at">y =</span> n<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymin =</span> lo<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymax =</span> hi<span class="sc">/</span><span class="dv">4</span>, </span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">fill =</span> year_group)) <span class="sc">+</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_sdo</span>(<span class="at">base_size =</span> <span class="dv">16</span>) <span class="sc">+</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> comma) <span class="sc">+</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>) <span class="sc">+</span></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Domestic Migration Out Flows by Income"</span>) <span class="sc">+</span></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_sdo_discrete</span>(<span class="at">primary =</span> <span class="st">"navy"</span>, <span class="at">other =</span> <span class="st">"orange"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> RACE2, <span class="at">y =</span> n<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymin =</span> lo<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymax =</span> hi<span class="sc">/</span><span class="dv">4</span>, <span class="at">fill =</span> year_group)) <span class="sc">+</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_sdo</span>(<span class="at">base_size =</span> <span class="dv">18</span>) <span class="sc">+</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> comma) <span class="sc">+</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>) <span class="sc">+</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Domestic Migration Out Flows by Race/Ethnicity"</span>) <span class="sc">+</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_sdo_discrete</span>(<span class="at">primary =</span> <span class="st">"navy"</span>, <span class="at">other =</span> <span class="st">"orange"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -382,27 +423,57 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <details class="code-fold">
 <summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ipums_design_df <span class="sc">%&gt;%</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(STATEFIP <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">45</span>, <span class="dv">6</span>, <span class="dv">12</span>, <span class="dv">48</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">STATE =</span> <span class="fu">case_when</span>(</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        STATEFIP <span class="sc">==</span> <span class="dv">45</span> <span class="sc">~</span> <span class="st">"South Carolina"</span>,</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        STATEFIP <span class="sc">==</span> <span class="dv">6</span> <span class="sc">~</span> <span class="st">"California"</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        STATEFIP <span class="sc">==</span> <span class="dv">12</span> <span class="sc">~</span> <span class="st">"Florida"</span>,</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        STATEFIP <span class="sc">==</span> <span class="dv">48</span> <span class="sc">~</span> <span class="st">"Texas"</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    )) <span class="sc">%&gt;%</span> </span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(STATE, year_group, out_match) <span class="sc">%&gt;%</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survey_tally</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lo =</span> n <span class="sc">-</span> <span class="fl">1.645</span><span class="sc">*</span>n_se, <span class="at">hi =</span> n <span class="sc">+</span> <span class="fl">1.645</span><span class="sc">*</span>n_se) <span class="sc">%&gt;%</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> year_group, <span class="at">y =</span> n, <span class="at">fill =</span> out_match, <span class="at">ymin =</span> lo, <span class="at">ymax =</span> hi)) <span class="sc">+</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>STATE)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(year_group, INCOMEGROUP) <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survey_tally</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lo =</span> n <span class="sc">-</span> <span class="fl">1.645</span><span class="sc">*</span>n_se, <span class="at">hi =</span> n <span class="sc">+</span> <span class="fl">1.645</span><span class="sc">*</span>n_se) <span class="sc">%&gt;%</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">INCOMEGROUP =</span> <span class="fu">str_replace</span>(INCOMEGROUP, <span class="st">" "</span>, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">INCOMEGROUP =</span> <span class="fu">factor</span>(INCOMEGROUP, <span class="at">levels =</span> <span class="fu">unique</span>(INCOMEGROUP))) <span class="sc">%&gt;%</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> INCOMEGROUP, <span class="at">y =</span> n<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymin =</span> lo<span class="sc">/</span><span class="dv">4</span>, <span class="at">ymax =</span> hi<span class="sc">/</span><span class="dv">4</span>, </span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">fill =</span> year_group)) <span class="sc">+</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_sdo</span>(<span class="at">base_size =</span> <span class="dv">16</span>) <span class="sc">+</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> comma) <span class="sc">+</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>) <span class="sc">+</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Domestic Migration Out Flows by Income"</span>) <span class="sc">+</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_sdo_discrete</span>(<span class="at">primary =</span> <span class="st">"navy"</span>, <span class="at">other =</span> <span class="st">"orange"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
 <p><img src="migration_flow_demography_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ipums_design_df <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(STATEFIP <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">45</span>, <span class="dv">6</span>, <span class="dv">12</span>, <span class="dv">48</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">STATE =</span> <span class="fu">case_when</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        STATEFIP <span class="sc">==</span> <span class="dv">45</span> <span class="sc">~</span> <span class="st">"South Carolina"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        STATEFIP <span class="sc">==</span> <span class="dv">6</span> <span class="sc">~</span> <span class="st">"California"</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        STATEFIP <span class="sc">==</span> <span class="dv">12</span> <span class="sc">~</span> <span class="st">"Florida"</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        STATEFIP <span class="sc">==</span> <span class="dv">48</span> <span class="sc">~</span> <span class="st">"Texas"</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    )) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(STATE, year_group, out_match) <span class="sc">%&gt;%</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">survey_tally</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">lo =</span> n <span class="sc">-</span> <span class="fl">1.645</span><span class="sc">*</span>n_se, <span class="at">hi =</span> n <span class="sc">+</span> <span class="fl">1.645</span><span class="sc">*</span>n_se) <span class="sc">%&gt;%</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> year_group, <span class="at">y =</span> n, <span class="at">fill =</span> out_match, <span class="at">ymin =</span> lo, <span class="at">ymax =</span> hi)) <span class="sc">+</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>STATE)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="migration_flow_demography_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>

@@ -104,7 +104,8 @@ translate_state_name <- function(x){
 }
 
 # what are the state to state files we have available to us?
-s2s_acs_raw_files <- "./data/s2s/" %>%
+s2s_acs_raw_files <- "G:/Shared drives/State Demography Office/Data/" %>%
+    str_c("ACS/State2StateMigration/") %>%
     list.files(full.names = TRUE)
 
 # assign them a name based on their associated year
@@ -293,7 +294,7 @@ harmonize_mig_df %>%
     scale_fill_sdo_discrete(primary = "navy", other = "orange")
 ```
 
-These numbers are helpful but we want to compare them against the net-migration estimates to see how close they 
+These numbers are helpful but we want to compare them against the PEP net-migration estimates to see how close they 
 
 ```{r warning=FALSE, message=FALSE}
 acs_est_df <- harmonize_mig_df %>%
